@@ -1,5 +1,4 @@
-('C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
- 'app\\NETWIRE\\build\\netwire\\PYZ-00.pyz',
+('C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\build\\netwire\\PYZ-00.pyz',
  [('PIL',
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\PIL\\__init__.py',
    'PYMODULE'),
@@ -502,8 +501,7 @@
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\configparser.py',
    'PYMODULE'),
   ('console',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\console.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\console.py',
    'PYMODULE'),
   ('contextlib',
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\contextlib.py',
@@ -716,12 +714,10 @@
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\decimal.py',
    'PYMODULE'),
   ('devices_history',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\devices_history.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\devices_history.py',
    'PYMODULE'),
   ('devices_window',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\devices_window.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\devices_window.py',
    'PYMODULE'),
   ('difflib',
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\difflib.py',
@@ -1093,19 +1089,16 @@
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\nacl\\utils.py',
    'PYMODULE'),
   ('netinfo',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\netinfo.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\netinfo.py',
    'PYMODULE'),
   ('netinfo2',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\netinfo2.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\netinfo2.py',
    'PYMODULE'),
   ('netrc',
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\netrc.py',
    'PYMODULE'),
   ('networkspeed',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\networkspeed.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\networkspeed.py',
    'PYMODULE'),
   ('nturl2path',
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\nturl2path.py',
@@ -3064,8 +3057,7 @@
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\tracemalloc.py',
    'PYMODULE'),
   ('traffic_window',
-   'C:\\Users\\Jarabek\\Documents\\GitHub\\networkapp55\\network '
-   'app\\NETWIRE\\traffic_window.py',
+   'C:\\Users\\Jarabek\\Desktop\\NETWIREapp\\NETWIRE\\traffic_window.py',
    'PYMODULE'),
   ('ttkthemes',
    'C:\\Users\\Jarabek\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\ttkthemes\\__init__.py',

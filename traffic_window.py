@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox, Button
 import scapy.all as scapy
 import psutil
 from PIL import Image, ImageTk
 import threading
 import time
 import os
+import sys
 
 
 capturing = [False]
@@ -413,6 +414,16 @@ def navigate_to_traffic(main_frame, stop_scanning):
     )
     erase_button.pack(side="left", padx=10)
 
+    def resource_path(relative_path):
+        """ Get the absolute path to a resource bundled with PyInstaller """
+        try:
+            # PyInstaller creates a temporary folder and stores the resources there
+            base_path = sys._MEIPASS
+        except Exception:
+            # If running normally, use the current directory
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
     # Add Dropdown for Interface Selection
     all_interfaces = get_all_network_interfaces()
     selected_interface = tk.StringVar()  # Ensure this is a tk.StringVar()
@@ -437,6 +448,15 @@ def navigate_to_traffic(main_frame, stop_scanning):
         filter_frame, text="Apply Filter", command=apply_filter
     )
     filter_button.pack(side="left")
+
+    guidance_image = Image.open(resource_path("assets/guidance.png")) # Replace with your image path
+    guidance_image = guidance_image.resize((40, 40))
+    guidance_icon = ImageTk.PhotoImage(guidance_image)
+
+    # New button with an image
+    new_button = Button(header_frame, image=guidance_icon, bd=1, bg="#2c2c2c", highlightthickness=0, activebackground='#181818', command=lambda: print("Button clicked!"))
+    new_button.image = guidance_icon  # Keep a reference to avoid garbage collection
+    new_button.pack(side="right", padx=(5, 0))
 
     # Apply style to Treeview
     style = ttk.Style()

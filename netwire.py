@@ -38,13 +38,20 @@ def navigate_to_root(main_frame):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
-    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.0", style="Main.TLabel")
+    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.2", style="Main.TLabel")
     root_window_label.pack(pady=50)
 
     github_link_label = tk.Label(main_frame, text="https://github.com/pipohappy/networkapp55.git", font=("Arial", 18, "bold"), bg='#2c2c2c', fg="orange", cursor="hand2")
     github_link_label.pack(pady=20)
     
     github_link_label.bind("<Button-1>", lambda e: webbrowser.open_new("https://github.com/pipohappy/networkapp55.git"))
+
+    guidance_image = Image.open(resource_path("assets/guidance.png"))
+    guidance_icon = ImageTk.PhotoImage(guidance_image)
+    
+    question_button = tk.Button(main_frame, image=guidance_icon, bg='#2c2c2c', relief='ridge', highlightbackground='white', activebackground='#181818', bd=2, command=lambda: print("Help button clicked"))
+    question_button.image = guidance_icon  # Keep a reference to the image
+    question_button.place(relx=1.0, rely=0.0, anchor="ne", x=-25, y=5)
 
 def main():
     global root, main_frame

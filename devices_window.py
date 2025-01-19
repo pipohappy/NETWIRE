@@ -1,5 +1,8 @@
 import tkinter as tk
-from tkinter import ttk, font
+import os
+import sys
+from PIL import Image, ImageTk
+from tkinter import ttk, font, Button
 import threading
 from netinfo2 import nmap_scan  # Import the port scan function
 from netinfo import unified_device_scan, add_device_to_tree
@@ -66,39 +69,107 @@ def navigate_to_devices(main_frame):
     top_right_frame = ttk.Frame(right_frame, style="Main.TFrame")
     top_right_frame.grid(row=0, column=0, sticky="nsew", padx=10)
 
-    port_scan_text = tk.Text(top_right_frame, wrap="word", state="disabled", background="#2c2c2c", foreground="white")
-    port_scan_text.pack(fill="both", expand=True, padx=10, pady=10)
+    # Configure grid layout for top_right_frame
+    top_right_frame.rowconfigure(1, weight=1)
+    top_right_frame.columnconfigure(0, weight=1)
+    top_right_frame.columnconfigure(1, weight=0)
 
-    # Clear Port Scan Results Button
+    # Label for Port Scan
+    port_scan_label = ttk.Label(
+        top_right_frame,
+        text="Port Scan",
+        style="Main.TLabel",
+        font=("Arial", 16),
+        foreground="orange"
+    )
+    port_scan_label.grid(row=0, column=0, sticky="w", pady=(10, 5))
+
+    # Frame for buttons next to the label
+    top_buttons_frame = ttk.Frame(top_right_frame, style="Main.TFrame")
+    top_buttons_frame.grid(row=0, column=1, sticky="e", pady=(10, 5), padx=(5, 0))
+
+    # Define the clear_port_scan_results function
     def clear_port_scan_results():
         port_scan_text.config(state="normal")
         port_scan_text.delete(1.0, tk.END)  # Clear all results
         port_scan_text.config(state="disabled")
 
-    clear_button = ttk.Button(top_right_frame, text="Clear Results", style="Main.TButton", command=clear_port_scan_results)
-    clear_button.pack(pady=10)
+    def resource_path(relative_path):
+        """ Get the absolute path to a resource bundled with PyInstaller """
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
+    guidance_image = Image.open(resource_path("assets/guidance.png"))  # Replace with your image path
+    guidance_image = guidance_image.resize((40, 40))
+    guidance_icon = ImageTk.PhotoImage(guidance_image)
+
+    # New button with an image
+    new_button = Button(
+        top_buttons_frame,
+        image=guidance_icon,
+        bd=1,
+        bg="#2c2c2c",
+        highlightthickness=0,
+        activebackground='#181818',
+        command=lambda: print("Button clicked!")
+    )
+    new_button.image = guidance_icon  # Keep a reference to avoid garbage collection
+    new_button.pack(side="right", padx=(5, 0))
+
+    # Clear Port Scan Results Button
+    clear_button = ttk.Button(
+        top_buttons_frame,
+        text="Clear Results",
+        style="Main.TButton",
+        command=clear_port_scan_results
+    )
+    clear_button.pack(side="right", padx=(5, 0))
+
+    # Port Scan Text Box (placed below the label and buttons)
+    port_scan_text = tk.Text(
+        top_right_frame,
+        wrap="word",
+        state="disabled",
+        background="#2c2c2c",
+        foreground="white"
+    )
+    port_scan_text.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=(10, 10))
 
     # Speed Test Section
     speed_test_frame = ttk.Frame(right_frame, style="Main.TFrame")
     speed_test_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
-    large_font = font.Font(size=56)
+    # Configure row weights for better layout control
+    speed_test_frame.rowconfigure(0, weight=0)  # For the title
+    speed_test_frame.rowconfigure(1, weight=0)  # For the loading label
+    speed_test_frame.rowconfigure(2, weight=1)  # For the result text box
+    speed_test_frame.rowconfigure(3, weight=0)  # For the button
+    speed_test_frame.columnconfigure(0, weight=1)
+
+    # Speed Test Title
+    large_font = font.Font(size=30)  # Moderate size for better fit
     speed_test_label = ttk.Label(speed_test_frame, text="Speed Test", style="Main.TLabel", font=large_font)
-    speed_test_label.pack(pady=(10, 5))
+    speed_test_label.grid(row=0, column=0, pady=(10, 5), sticky="n")
 
-    loading_label = ttk.Label(speed_test_frame, text="", style="Main.TLabel")
-    loading_label.pack(pady=10)
+    # Loading Label
+    loading_label = ttk.Label(speed_test_frame, text="", style="Main.TLabel", font=("Arial", 12))
+    loading_label.grid(row=1, column=0, pady=5, sticky="n")
 
-    result_label = ttk.Label(speed_test_frame, style="Main.TLabel")
-    result_label.pack(pady=10)
+    # Result Text Box for Speed Test
+    result_text = tk.Text(speed_test_frame, wrap="word", state="disabled", height=6, width=40, background="#2c2c2c", foreground="orange", font=("Arial", 25))
+    result_text.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
+    # Speed Test Button
     speed_test_button = ttk.Button(
         speed_test_frame,
         text="Run Speed Test",
-        command=lambda: start_speed_test(loading_label, result_label),
+        command=lambda: start_speed_test(loading_label, result_text),
         style="Main.TButton",
     )
-    speed_test_button.pack(pady=10, padx=10, fill="x")
+    speed_test_button.grid(row=3, column=0, pady=10, padx=10, sticky="nsew")
 
     # Wrapper for running device scan
     def run_scans_wrapper():

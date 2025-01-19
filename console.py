@@ -3,8 +3,11 @@ import telnetlib
 import threading
 import time
 import serial
+import os
+import sys
+from PIL import Image, ImageTk
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, scrolledtext, Button
 
 class RemoteConsole:
     def __init__(self, main_frame, stop_scanning):
@@ -49,6 +52,25 @@ class RemoteConsole:
 
         ttk.Button(self.top_frame, text="Connect", style="Sidebar.TButton", command=self.connect).pack(side="left", padx=5)
         ttk.Button(self.top_frame, text="Disconnect", style="Sidebar.TButton", command=self.disconnect).pack(side="left", padx=5)
+
+        def resource_path(relative_path):
+            """ Get the absolute path to a resource bundled with PyInstaller """
+            try:
+                # PyInstaller creates a temporary folder and stores the resources there
+                base_path = sys._MEIPASS
+            except Exception:
+                # If running normally, use the current directory
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+
+        guidance_image = Image.open(resource_path("assets/guidance.png")) # Replace with your image path
+        guidance_image = guidance_image.resize((40, 40))
+        guidance_icon = ImageTk.PhotoImage(guidance_image)
+
+        # New button with an image
+        new_button = Button(self.top_frame, image=guidance_icon, bd=1, bg="#2c2c2c", highlightthickness=0, activebackground='#181818', command=lambda: print("Button clicked!"))
+        new_button.image = guidance_icon  # Keep a reference to avoid garbage collection
+        new_button.pack(side="right", padx=(5, 0))
 
         # Main Terminal Window for output
         self.output_text = scrolledtext.ScrolledText(
