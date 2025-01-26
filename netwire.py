@@ -18,11 +18,19 @@ def create_styles(style):
     style.map("NetWire.TButton", background=[('active', '#2c2c2c')], foreground=[('active', 'orange')])
 
     style.configure("Sidebar.TFrame", background='#181818', relief="ridge", borderwidth=2)
-    style.configure("Sidebar.TButton", background='#181818', borderwidth=0)
+    style.configure("Sidebar.TButton", background='#181818', borderwidth=0, foreground="white")
     style.map("Sidebar.TButton", background=[('active', '#2c2c2c')])
 
     style.configure("Main.TFrame", background='#2c2c2c')
     style.configure("Main.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 24, "bold"))
+
+    style.configure("Devices.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 18, "bold"), borderwidth=0)
+    style.configure("Devices.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 20, "bold") )
+
+    style.configure("Traffic.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 15, "bold"), borderwidth=0)
+    style.configure("Console.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 15, "bold"), borderwidth=0)
+    style.configure("Console.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 12, "bold"))
+
     
 def resource_path(relative_path):
     """ Get the absolute path to a resource bundled with PyInstaller """
@@ -38,7 +46,7 @@ def navigate_to_root(main_frame):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
-    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.2", style="Main.TLabel")
+    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.3", style="Main.TLabel")
     root_window_label.pack(pady=50)
 
     github_link_label = tk.Label(main_frame, text="https://github.com/pipohappy/networkapp55.git", font=("Arial", 18, "bold"), bg='#2c2c2c', fg="orange", cursor="hand2")

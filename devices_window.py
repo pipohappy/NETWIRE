@@ -33,7 +33,7 @@ def navigate_to_devices(main_frame):
     left_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
     # IP Range Entry
-    ip_range_label = ttk.Label(left_frame, text="IP Range:", style="Main.TLabel")
+    ip_range_label = ttk.Label(left_frame, text="IP Range:", style="Devices.TLabel")
     ip_range_label.pack(pady=10, anchor="w")
 
     ip_range_entry = tk.Entry(left_frame)
@@ -44,10 +44,10 @@ def navigate_to_devices(main_frame):
     button_frame = ttk.Frame(left_frame, style="Main.TFrame")
     button_frame.pack(pady=10, fill="x")
 
-    scan_button = ttk.Button(button_frame, text="Start Scan", style="Main.TButton")
+    scan_button = ttk.Button(button_frame, text="Start Scan", style="Devices.TButton")
     scan_button.pack(side="left", expand=True, fill="x", padx=(0, 5))
 
-    save_scan_button = ttk.Button(button_frame, text="Save Scan", style="Main.TButton", command=lambda: save_scan(device_tree))
+    save_scan_button = ttk.Button(button_frame, text="Save Scan", style="Devices.TButton", command=lambda: save_scan(device_tree))
     save_scan_button.pack(side="left", expand=True, fill="x")
 
     # TreeView to display scanned devices
@@ -78,7 +78,7 @@ def navigate_to_devices(main_frame):
     port_scan_label = ttk.Label(
         top_right_frame,
         text="Port Scan",
-        style="Main.TLabel",
+        style="Devices.TLabel",
         font=("Arial", 16),
         foreground="orange"
     )
@@ -123,7 +123,7 @@ def navigate_to_devices(main_frame):
     clear_button = ttk.Button(
         top_buttons_frame,
         text="Clear Results",
-        style="Main.TButton",
+        style="Devices.TButton",
         command=clear_port_scan_results
     )
     clear_button.pack(side="right", padx=(5, 0))
@@ -151,11 +151,11 @@ def navigate_to_devices(main_frame):
 
     # Speed Test Title
     large_font = font.Font(size=30)  # Moderate size for better fit
-    speed_test_label = ttk.Label(speed_test_frame, text="Speed Test", style="Main.TLabel", font=large_font)
+    speed_test_label = ttk.Label(speed_test_frame, text="Speed Test", style="Devices.TLabel", font=large_font)
     speed_test_label.grid(row=0, column=0, pady=(10, 5), sticky="n")
 
     # Loading Label
-    loading_label = ttk.Label(speed_test_frame, text="", style="Main.TLabel", font=("Arial", 12))
+    loading_label = ttk.Label(speed_test_frame, text="", style="Devices.TLabel", font=("Arial", 12))
     loading_label.grid(row=1, column=0, pady=5, sticky="n")
 
     # Result Text Box for Speed Test
@@ -167,7 +167,7 @@ def navigate_to_devices(main_frame):
         speed_test_frame,
         text="Run Speed Test",
         command=lambda: start_speed_test(loading_label, result_text),
-        style="Main.TButton",
+        style="Devices.TButton",
     )
     speed_test_button.grid(row=3, column=0, pady=10, padx=10, sticky="nsew")
 
