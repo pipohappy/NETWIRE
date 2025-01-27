@@ -392,25 +392,25 @@ def navigate_to_traffic(main_frame, stop_scanning):
 
     # Create the Start/Stop Capture button
     capture_button = ttk.Button(
-        header_frame, text="Start Capture", style="Main.TButton", command=lambda: toggle_capture_state(capture_button)
+        header_frame, text="Start Capture", style="Traffic.TButton", command=lambda: toggle_capture_state(capture_button)
     )
     capture_button.pack(side="left", padx=10)
 
     # Create Save Capture button
     save_button = ttk.Button(
-        header_frame, text="Save Capture", style="Main.TButton", command=save_captured_traffic
+        header_frame, text="Save Capture", style="Traffic.TButton", command=save_captured_traffic
     )
     save_button.pack(side="left", padx=10)
 
     # Create Load Capture button
     load_button = ttk.Button(
-        header_frame, text="Load Capture", style="Main.TButton", command=load_captured_traffic
+        header_frame, text="Load Capture", style="Traffic.TButton", command=load_captured_traffic
     )
     load_button.pack(side="left", padx=10)
 
     # Create Erase Capture button
     erase_button = ttk.Button(
-        header_frame, text="Erase Capture", style="Main.TButton", command=erase_captured_traffic
+        header_frame, text="Erase Capture", style="Traffic.TButton", command=erase_captured_traffic
     )
     erase_button.pack(side="left", padx=10)
 
@@ -429,7 +429,7 @@ def navigate_to_traffic(main_frame, stop_scanning):
     selected_interface = tk.StringVar()  # Ensure this is a tk.StringVar()
     selected_interface.set("Select Interface")  # Set the default value
 
-    interface_dropdown = ttk.Combobox(header_frame, textvariable=selected_interface, values=all_interfaces, state="readonly", width=30)
+    interface_dropdown = ttk.Combobox(header_frame, textvariable=selected_interface, values=all_interfaces, state="readonly", width=30, style="Filter.TCombobox")
     
     interface_dropdown.pack(side="left", padx=10)
     interface_dropdown.bind("<<ComboboxSelected>>", lambda event: update_interface(header_frame, selected_interface.get(), captured_packets))
@@ -438,15 +438,14 @@ def navigate_to_traffic(main_frame, stop_scanning):
     filter_frame = ttk.Frame(header_frame)
     filter_frame.pack(side="left", padx=10)
 
-    filter_label = ttk.Label(filter_frame, text="Filter:")
+    filter_label = ttk.Label(filter_frame, text="Filter:", style="Traffic.TLabel")
     filter_label.pack(side="left")
 
-    filter_entry = ttk.Entry(filter_frame, width=30)
+    filter_entry = ttk.Entry(filter_frame, width=30, foreground="White")
     filter_entry.pack(side="left", padx=5)
 
     filter_button = ttk.Button(
-        filter_frame, text="Apply Filter", command=apply_filter
-    )
+    filter_frame, text="Apply Filter", style="Traffic2.TButton", command=apply_filter)
     filter_button.pack(side="left")
 
     guidance_image = Image.open(resource_path("assets/guidance.png")) # Replace with your image path

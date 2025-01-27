@@ -24,12 +24,21 @@ def create_styles(style):
     style.configure("Main.TFrame", background='#2c2c2c')
     style.configure("Main.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 24, "bold"))
 
+    #devices styles
     style.configure("Devices.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 18, "bold"), borderwidth=0)
     style.configure("Devices.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 20, "bold") )
-
+    #traffic styles
     style.configure("Traffic.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 15, "bold"), borderwidth=0)
+    style.configure("Traffic2.TButton", foreground="orange", font=("Arial", 15), borderwidth=0)
+    style.configure("Traffic.TLabel", foreground="orange", font=("Arial", 15))
+    style.configure("Filter.TCombobox", foreground="White", font=("Arial", 15))
+    style.configure("TCombobox", selectforeground="White", font=("Arial", 15))
+    #console styles
     style.configure("Console.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 15, "bold"), borderwidth=0)
-    style.configure("Console.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 12, "bold"))
+    style.configure("Console.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 15, "bold"))
+    style.configure("TMenubutton", background="#2c2c2c", foreground="White", font=("Arial", 12))
+    style.map("TMenubutton", background=[("active", "#181818")])
+    style.configure("TEntry", background="#2c2c2c", foreground="White", font=("Courier", 18))
 
     
 def resource_path(relative_path):
