@@ -55,7 +55,7 @@ def navigate_to_root(main_frame):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
-    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.3", style="Main.TLabel")
+    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.5", style="Main.TLabel")
     root_window_label.pack(pady=50)
 
     github_link_label = tk.Label(main_frame, text="https://github.com/pipohappy/networkapp55.git", font=("Arial", 18, "bold"), bg='#2c2c2c', fg="orange", cursor="hand2")
