@@ -1,16 +1,19 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, Button
 import scapy.all as scapy
+from scapy.layers.inet import IP, TCP, UDP
 import psutil
 from PIL import Image, ImageTk
 import threading
 import time
 import os
+import re
 import sys
 
 
 capturing = [False]
 captured_packets = []
+logical_ops = ['and', 'or', 'not']
 reload_icon = None
 capture_thread = None
 active_filter = []
@@ -112,112 +115,133 @@ def insert_packet_data(packet_count, protocol, source_ip, destination_ip, length
         )
         traffic_tree.tag_configure(protocol, background=color)
 
-# Traffic Filtering Functions
 def apply_filter():
     global active_filter
     filter_text = filter_entry.get().strip().lower()
-    filter_terms = [term.strip() for term in filter_text.split(",") if term.strip()]
 
-    if not filter_terms:
-        active_filter = []
-        traffic_tree.delete(*traffic_tree.get_children())
-        for i, packet in enumerate(captured_packets):
-            protocol, source_ip, destination_ip, length, info = get_packet_info(packet)
-            color = PROTOCOL_COLORS.get(protocol, "#FFFFFF")  # Get color for protocol
-            traffic_tree.insert(
-                '', 'end', text=str(i+1), values=(protocol, source_ip, destination_ip, length, info),
-                tags=(protocol,)
-            )
-            traffic_tree.tag_configure(protocol, background=color)  # Apply color
+    if not filter_text:
+        active_filter = []  # Clear filter if no input
+        update_traffic_display()  # Show all captured packets
         return
+    
+    # Process the filter input and break it into conditions
+    active_filter = parse_filters(filter_text)
+    update_traffic_display()
 
-    for term in filter_terms:
-        clean_term = term.replace("not ", "").replace("exc ", "").strip()
-        if not is_valid_filter(clean_term):
-            messagebox.showerror("Incorrect Syntax", f"The filter '{term}' contains invalid syntax.")
-            return
+def parse_filters(filter_expr):
+    """Convert filter expression to a properly formatted list."""
+    # Replace logical operators
+    filter_expr = filter_expr.replace("!", " not ")
+    filter_expr = filter_expr.replace("&&", " and ")
+    filter_expr = filter_expr.replace("||", " or ")
 
-    active_filter = filter_terms
+    # Tokenize the expression and split by spaces
+    filter_parts = filter_expr.strip().split()
 
-    traffic_tree.delete(*traffic_tree.get_children())
+    # Handle negation (`not`) correctly for conditions
+    updated_filter_parts = []
+    skip_next = False
+
+    for i, part in enumerate(filter_parts):
+        if skip_next:
+            skip_next = False
+            continue
+        if part == "not" and i + 1 < len(filter_parts):
+            updated_filter_parts.append("not " + filter_parts[i + 1])
+            skip_next = True
+        else:
+            updated_filter_parts.append(part)
+    
+    return updated_filter_parts
+
+# Update the display of captured traffic based on the filter
+def update_traffic_display():
+    traffic_tree.delete(*traffic_tree.get_children())  # Clear previous results
     for i, packet in enumerate(captured_packets):
-        if packet_matches_filter(packet, filter_terms):
+        if packet_matches_filter(packet, active_filter):
             protocol, source_ip, destination_ip, length, info = get_packet_info(packet)
-            color = PROTOCOL_COLORS.get(protocol, "#FFFFFF")  # Get color for protocol
+            color = PROTOCOL_COLORS.get(protocol, "#FFFFFF")  # Default color if not found
             traffic_tree.insert(
-                '', 'end', text=str(i+1), values=(protocol, source_ip, destination_ip, length, info),
+                '', 'end', text=str(i + 1), values=(protocol, source_ip, destination_ip, length, info),
                 tags=(protocol,)
             )
             traffic_tree.tag_configure(protocol, background=color)  # Apply color
 
-def is_valid_filter(term):
-    valid_protocols = ["arp", "dns", "icmp", "tcp", "udp", "ip", "ipv6"]
-    if term.lower() in valid_protocols:
-        return True
-    if term.count(".") == 3 or ":" in term:  # IPv4 or IPv6 simple check
-        return True
+def check_src(packet, ip):
+    """Check if the source IP matches."""
+    return get_packet_info(packet)[1] == ip
+
+def check_dst(packet, ip):
+    """Check if the destination IP matches."""
+    return get_packet_info(packet)[2] == ip
+
+def check_port(packet, port):
+    """Check if the port matches (TCP or UDP)."""
+    return (packet.haslayer(TCP) and (packet.sport == port or packet.dport == port)) or \
+           (packet.haslayer(UDP) and (packet.sport == port or packet.dport == port))
+
+def check_protocol(packet, proto):
+    """Check if the protocol matches."""
+    return get_packet_info(packet)[0].lower() == proto.lower()
+
+def check_ip(packet, ip, direction="src"):
+    """General function to check source or destination IP."""
+    packet_info = get_packet_info(packet)
+    if direction == "src":
+        return packet_info[1] == ip
+    elif direction == "dst":
+        return packet_info[2] == ip
     return False
 
-def packet_matches_filter(packet, filter_terms):
-    if not filter_terms:
-        return True
+def packet_matches_filter(packet, filters):
+    try:
+        if not filters:
+            return True  # No filter applied, show all packets
 
-    protocol, source_ip, destination_ip, _, info = get_packet_info(packet)
-    packet_included = True
-    match_found = False
+        condition_string = " ".join(filters)
 
-    for term in filter_terms:
-        exclude = term.startswith("not ")
-        exception = " exc " in term
+        # Match standalone IPv4 addresses
+        ipv4_match = re.match(r'^\d{1,3}(\.\d{1,3}){3}$', condition_string)
+        if ipv4_match:
+            return check_ip(packet, condition_string, "src") or check_ip(packet, condition_string, "dst")
 
-        # Handle "dst" with multiple IPs
-        if term.startswith("dst "):
-            dst_ips = term[4:].split(",")  # Split by commas for multiple IPs
-            dst_ips = [ip.strip() for ip in dst_ips]  # Clean extra spaces around IPs
+        # Match standalone IPv6 or MAC
+        if check_mac_or_ipv6(packet, condition_string):
+            return True
 
-            if any(dst_ip.lower() == destination_ip.lower() for dst_ip in dst_ips):
-                match_found = True
-            else:
-                packet_included = False
-            continue
+        # Apply existing filter transformations
+        condition_string = re.sub(r'\bsrc\s([\d\.]+)\b', r'check_src(packet, "\1")', condition_string)
+        condition_string = re.sub(r'\bdst\s([\d\.]+)\b', r'check_dst(packet, "\1")', condition_string)
+        condition_string = re.sub(r'\bport\s(\d+)\b', r'check_port(packet, \1)', condition_string)
+        condition_string = re.sub(r'\b(tcp|udp|icmp|arp)\b', r'check_protocol(packet, "\1")', condition_string)
 
-        # Handle "src" with multiple IPs
-        elif term.startswith("src "):
-            src_ips = term[4:].split(",")  # Split by commas for multiple IPs
-            src_ips = [ip.strip() for ip in src_ips]  # Clean extra spaces around IPs
+        print(f"Evaluating condition: {condition_string}")
+        return eval(condition_string, {
+            "packet": packet, 
+            "check_src": check_src, 
+            "check_dst": check_dst, 
+            "check_port": check_port, 
+            "check_protocol": check_protocol,
+            "check_mac_or_ipv6": check_mac_or_ipv6
+        })
 
-            if any(src_ip.lower() == source_ip.lower() for src_ip in src_ips):
-                match_found = True
-            else:
-                packet_included = False
-            continue
+    except Exception as e:
+        print(f"Error in filter evaluation: {e}")
+        return False
 
-        # Handle "exc" (exception) filter logic
-        if exception:
-            exc_parts = term.split(" exc ")
-            clean_term = exc_parts[0].replace("not ", "").strip()
-            exc_protocol = exc_parts[1].strip()
-            match = clean_term in source_ip.lower() or clean_term in destination_ip.lower()
-            if match and protocol.lower() == exc_protocol.lower():
-                return True
-            continue
+def check_mac_or_ipv6(packet, value):
+    """Check if it's a MAC address or an IPv6 address."""
+    # Check MAC addresses
+    if re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', value):  
+        return (packet.haslayer(scapy.Ether) and 
+                (packet[scapy.Ether].src == value or packet[scapy.Ether].dst == value))
+    
+    # Check IPv6 addresses
+    if ":" in value:  
+        return (packet.haslayer(scapy.IPv6) and 
+                (packet[scapy.IPv6].src == value or packet[scapy.IPv6].dst == value))
 
-        else:
-            clean_term = term.replace("not ", "").strip()
-            match = (
-                clean_term in protocol.lower()
-                or clean_term in source_ip.lower()
-                or clean_term in destination_ip.lower()
-                or clean_term in info.lower()
-            )
-            if exclude:
-                if match:
-                    packet_included = False
-            else:
-                if match:
-                    match_found = True
-
-    return packet_included and (match_found or any(term.startswith("not ") for term in filter_terms))
+    return False  # Not a match
 
 def show_packet_details(packet):
     details_window = tk.Toplevel()
@@ -242,7 +266,6 @@ def on_tree_item_click(event):
         else:
             messagebox.showwarning("Warning", "Selected item index is out of range.")
 
-# Packet Information
 def get_packet_info(packet):
     if packet.haslayer(scapy.ARP):
         protocol = "ARP"
@@ -260,6 +283,7 @@ def get_packet_info(packet):
         protocol = "IPv6"
     else:
         protocol = "Unknown"
+    
     if packet.haslayer(scapy.ARP):
         source_ip = packet[scapy.ARP].psrc
         destination_ip = packet[scapy.ARP].pdst
@@ -434,6 +458,12 @@ def navigate_to_traffic(main_frame, stop_scanning):
     interface_dropdown.pack(side="left", padx=10)
     interface_dropdown.bind("<<ComboboxSelected>>", lambda event: update_interface(header_frame, selected_interface.get(), captured_packets))
 
+    def reset_filter():
+        global active_filter
+        filter_entry.delete(0, tk.END)  # Clear the filter entry
+        active_filter = []  # Clear active filter
+        update_traffic_display()  # Update the display to show all packets
+
     # Add Filter functionality
     filter_frame = ttk.Frame(header_frame)
     filter_frame.pack(side="left", padx=10)
@@ -444,9 +474,15 @@ def navigate_to_traffic(main_frame, stop_scanning):
     filter_entry = ttk.Entry(filter_frame, width=30, foreground="White")
     filter_entry.pack(side="left", padx=5)
 
+    # Apply Filter button
     filter_button = ttk.Button(
-    filter_frame, text="Apply Filter", style="Traffic2.TButton", command=apply_filter)
+        filter_frame, text="Apply Filter", style="Traffic2.TButton", command=apply_filter)
     filter_button.pack(side="left")
+
+    # Reset Filter button (new button)
+    reset_button = ttk.Button(
+        filter_frame, text="Reset Filter", style="Traffic2.TButton", command=reset_filter)
+    reset_button.pack(side="left", padx=5)
 
     guidance_image = Image.open(resource_path("assets/guidance.png")) # Replace with your image path
     guidance_image = guidance_image.resize((40, 40))
