@@ -180,9 +180,26 @@ def check_port(packet, port):
     return (packet.haslayer(TCP) and (packet.sport == port or packet.dport == port)) or \
            (packet.haslayer(UDP) and (packet.sport == port or packet.dport == port))
 
+# def check_protocol(packet, proto):
+#     if proto == "tcp":
+#         return packet.haslayer(scapy.TCP)
+#     elif proto == "udp":
+#         return packet.haslayer(scapy.UDP)
+#     elif proto == "icmp":
+#         return packet.haslayer(scapy.ICMP)
+#     elif proto == "arp":
+#         return packet.haslayer(scapy.ARP)
+#     elif proto == "dns":
+#         return packet.haslayer(scapy.DNS)
+#     elif proto == "ip":
+#         return packet.haslayer(scapy.IP)
+#     elif proto == "ipv6":
+#         return packet.haslayer(scapy.IPv6)
+#     else:
+#         return False
 def check_protocol(packet, proto):
-    """Check if the protocol matches."""
-    return get_packet_info(packet)[0].lower() == proto.lower()
+    protocol, _, _, _, _ = get_packet_info(packet)
+    return protocol.lower() == proto.lower()
 
 def check_ip(packet, ip, direction="src"):
     """General function to check source or destination IP."""
@@ -213,7 +230,10 @@ def packet_matches_filter(packet, filters):
         condition_string = re.sub(r'\bsrc\s([\d\.]+)\b', r'check_src(packet, "\1")', condition_string)
         condition_string = re.sub(r'\bdst\s([\d\.]+)\b', r'check_dst(packet, "\1")', condition_string)
         condition_string = re.sub(r'\bport\s(\d+)\b', r'check_port(packet, \1)', condition_string)
-        condition_string = re.sub(r'\b(tcp|udp|icmp|arp)\b', r'check_protocol(packet, "\1")', condition_string)
+
+        # Check protocol
+        protocol, _, _, _, _ = get_packet_info(packet)
+        condition_string = re.sub(r'\b(tcp|udp|icmp|arp|dns|ip|ipv6)\b', r'check_protocol(packet, "\1")', condition_string)
 
         print(f"Evaluating condition: {condition_string}")
         return eval(condition_string, {
@@ -373,7 +393,14 @@ def save_captured_traffic():
     if save_directory:
         filename = f"traffic_{time.strftime('%Y%m%d_%H%M%S')}.pcap"
         full_path = os.path.join(save_directory, filename)
-        scapy.wrpcap(full_path, captured_packets)
+
+        # Get the filtered packets from the captured_packets list
+        filtered_packets = []
+        for packet in captured_packets:
+            if packet_matches_filter(packet, active_filter):
+                filtered_packets.append(packet)
+
+        scapy.wrpcap(full_path, filtered_packets)
         messagebox.showinfo("Save Successful", f"Traffic saved to {full_path}")
 
 def load_captured_traffic():
