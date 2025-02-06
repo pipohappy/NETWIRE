@@ -235,6 +235,31 @@ def packet_matches_filter(packet, filters):
         protocol, _, _, _, _ = get_packet_info(packet)
         condition_string = re.sub(r'\b(tcp|udp|icmp|arp|dns|ip|ipv6)\b', r'check_protocol(packet, "\1")', condition_string)
 
+        # Special handling for ipv6 with other protocols
+        if 'ipv6' in condition_string:
+            if packet.haslayer(scapy.IPv6):
+                ipv6_condition = True
+            else:
+                ipv6_condition = False
+
+            # Replace ipv6 with the evaluated condition
+            condition_string = condition_string.replace('ipv6', str(ipv6_condition))
+
+            # If ipv6 is combined with any other protocol, evaluate the condition separately
+            if any(protocol in condition_string for protocol in ['tcp', 'udp', 'icmp', 'arp', 'dns', 'ip']):
+                protocol_condition = eval(condition_string, {
+                    "packet": packet, 
+                    "check_src": check_src, 
+                    "check_dst": check_dst, 
+                    "check_port": check_port, 
+                    "check_protocol": check_protocol,
+                    "check_mac_or_ipv6": check_mac_or_ipv6
+                })
+
+                # If the protocol condition is False, return False
+                if not protocol_condition:
+                    return False
+
         print(f"Evaluating condition: {condition_string}")
         return eval(condition_string, {
             "packet": packet, 

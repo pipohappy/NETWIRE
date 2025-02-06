@@ -1,15 +1,14 @@
-import paramiko 
+import paramiko
 import threading
 import tkinter as tk
 from tkinter import ttk, scrolledtext
-import chardet
 import time
 
 class Console:
     def __init__(self, main_frame, stop_scanning):
         self.main_frame = main_frame
         self.stop_scanning = stop_scanning
-        self.protocol = tk.StringVar(value="ssh")
+        self.protocol = tk.StringVar(value="ssh")  # Default to SSH
         self.address = tk.StringVar()
         self.port = tk.StringVar(value="22")
         self.username = tk.StringVar()
@@ -23,7 +22,7 @@ class Console:
         self.top_frame.pack(side="top", fill="x", padx=10, pady=10)
 
         ttk.Label(self.top_frame, text="Protocol:", style="Console.TLabel").pack(side="left", padx=(0, 5))
-        protocol_menu = ttk.OptionMenu(self.top_frame, self.protocol, "SSH", "SSH")
+        protocol_menu = ttk.OptionMenu(self.top_frame, self.protocol, "SSH", "SSH", "Telnet")
         protocol_menu.pack(side="left")
 
         ttk.Label(self.top_frame, text="Address:", style="Console.TLabel").pack(side="left", padx=(10, 5))
@@ -56,59 +55,105 @@ class Console:
         self.command_input.bind("<Return>", self.handle_input)
         self.command_input.bind("<Up>", self.show_previous_command)
         self.command_input.bind("<Down>", self.show_next_command)
+        
+        # Bind Ctrl+C to handle the interrupt
+        self.command_input.bind("<Control-c>", self.handle_ctrl_c)
 
     def connect(self):
         address = self.address.get()
         port = int(self.port.get())
         username = self.username.get()
         password = self.password.get()
-        
-        self.append_output(f"Connecting to {address} via SSH...")
-        try:
-            self.ssh_client = paramiko.SSHClient()
-            self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.ssh_client.connect(address, port=port, username=username, password=password, look_for_keys=False, allow_agent=False)
-            self.shell = self.ssh_client.invoke_shell()
-            self.append_output("SSH connection established. Running interactive CMD...")
-            self.shell.send("chcp 65001\r\n")  # Set UTF-8 encoding in Windows CMD
-            self.shell.send("cmd\r\n")  # Start Windows CMD session
-            threading.Thread(target=self.read_shell_output, daemon=True).start()
-        except Exception as e:
-            self.append_output(f"SSH connection failed: {e}")
+
+        if self.protocol.get() == "SSH":
+            self.append_output(f"Connecting to {address} via SSH...")
+            try:
+                self.ssh_client = paramiko.SSHClient()
+                self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                self.ssh_client.connect(address, port=port, username=username, password=password, look_for_keys=False, allow_agent=False)
+                self.shell = self.ssh_client.invoke_shell()
+                self.append_output("SSH connection established. Running interactive CMD...")
+                self.shell.send("chcp 65001\r\n")  # Set UTF-8 encoding in Windows CMD
+                self.shell.send("cmd\r\n")  # Start Windows CMD session
+                threading.Thread(target=self.read_shell_output, daemon=True).start()
+            except Exception as e:
+                self.append_output(f"SSH connection failed: {e}")
+        elif self.protocol.get() == "Telnet":
+            self.append_output(f"Connecting to {address} via Telnet...")
+            try:
+                import telnetlib
+                self.telnet_client = telnetlib.Telnet(address, port)
+                self.append_output("Telnet connection established.")
+                threading.Thread(target=self.read_telnet_output, daemon=True).start()
+            except Exception as e:
+                self.append_output(f"Telnet connection failed: {e}")
 
     def disconnect(self):
         if self.ssh_client:
             self.ssh_client.close()
             self.ssh_client = None
             self.shell = None
+        elif hasattr(self, 'telnet_client') and self.telnet_client:
+            self.telnet_client.close()
+            self.telnet_client = None
         self.append_output("Disconnected.")
+
+    def read_telnet_output(self):
+        while hasattr(self, 'telnet_client') and self.telnet_client:
+            try:
+                time.sleep(0.1)  # Small delay to prevent excessive CPU usage
+                output = self.telnet_client.read_very_eager().decode('utf-8', errors='replace')
+                if output:
+                    self.append_output(output)
+            except Exception as e:
+                if hasattr(self, 'telnet_client') and self.telnet_client:
+                    self.append_output(f"Telnet error: {e}")
+                break
 
     def read_shell_output(self):
         while self.shell:
             try:
                 time.sleep(0.1)  # Small delay to prevent excessive CPU usage
-                if self.shell.recv_ready():
-                    raw_output = self.shell.recv(4096)
-                    encoding = "utf-8"  # Force UTF-8 encoding
-                    output = raw_output.decode(encoding, errors='replace')
+                output = self.shell.recv(1024).decode('utf-8', errors='replace')
+                if output:
                     self.append_output(output)
             except Exception as e:
-                self.append_output(f"Shell error: {e}")
+                if self.shell:
+                    self.append_output(f"SSH error: {e}")
                 break
 
     def handle_input(self, event):
         command = self.command_input.get().strip()
-        if command and self.shell:
+        if command:
             if command.lower() == "clear":
-                # Clear the output text box when the "clear" command is entered
                 self.clear_output()
-            else:
-                # Send the command to the shell for processing
+            elif self.shell:
                 self.shell.send(command + "\r\n")
-                # Save command to history
                 self.command_history.append(command)
-                self.history_index = len(self.command_history)  # Reset the history index after a new command
+                self.history_index = len(self.command_history)
+            elif hasattr(self, 'telnet_client') and self.telnet_client:
+                self.telnet_client.write(command.encode('ascii') + b"\r\n")
+                self.command_history.append(command)
+                self.history_index = len(self.command_history)
+            else:
+                self.command_history.append(command)
+                self.history_index = len(self.command_history)
             self.command_input.delete(0, tk.END)
+        else:
+            if self.shell:
+                self.shell.send("\r\n")
+            elif hasattr(self, 'telnet_client') and self.telnet_client:
+                self.telnet_client.write(b"\r\n")
+            self.command_input.delete(0, tk.END)
+        return "break"
+
+    def handle_ctrl_c(self, event):
+        if self.shell:
+            try:
+                self.shell.send("\x03")  # Send the Ctrl+C signal (ASCII value 3)
+                self.append_output("Interrupt signal (Ctrl+C) sent to the remote shell.")
+            except Exception as e:
+                self.append_output(f"Failed to send Ctrl+C: {e}")
         return "break"
     
     def clear_output(self):
@@ -116,6 +161,7 @@ class Console:
         self.output_text.config(state="normal")  # Enable editing to delete content
         self.output_text.delete(1.0, tk.END)  # Delete all text from the start to the end
         self.output_text.config(state="disabled")  # Disable editing again
+
 
     def show_previous_command(self, event):
         # Navigate to the previous command in history

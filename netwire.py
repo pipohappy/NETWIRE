@@ -28,8 +28,8 @@ def create_styles(style):
     style.configure("Devices.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 18, "bold"), borderwidth=0)
     style.configure("Devices.TLabel", background='#2c2c2c', foreground="orange", font=("Arial", 20, "bold") )
     #traffic styles
-    style.configure("Traffic.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 15, "bold"), borderwidth=0)
-    style.configure("Traffic2.TButton", foreground="orange", font=("Arial", 15), borderwidth=0)
+    style.configure("Traffic.TButton", background='#2c2c2c', foreground="orange", font=("Arial", 13, "bold"), borderwidth=0, width=13)
+    style.configure("Traffic2.TButton", foreground="orange", font=("Arial", 13), borderwidth=0, width=10)
     style.configure("Traffic.TLabel", foreground="orange", font=("Arial", 15))
     style.configure("Filter.TCombobox", foreground="White", font=("Arial", 15))
     style.configure("TCombobox", selectforeground="White", font=("Arial", 15))
@@ -55,7 +55,7 @@ def navigate_to_root(main_frame):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
-    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.5", style="Main.TLabel")
+    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.6", style="Main.TLabel")
     root_window_label.pack(pady=50)
 
     github_link_label = tk.Label(main_frame, text="https://github.com/pipohappy/networkapp55.git", font=("Arial", 18, "bold"), bg='#2c2c2c', fg="orange", cursor="hand2")

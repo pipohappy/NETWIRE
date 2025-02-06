@@ -60,7 +60,7 @@ def unified_device_scan(is_scanning, device_tree, add_device_to_tree, interval=5
                 ether = Ether(dst="ff:ff:ff:ff:ff:ff")
                 packet = ether / arp
                 conf.verb = 0
-                result = srp(packet, timeout=1, verbose=0)[0]
+                result = srp(packet, timeout=3, verbose=0)[0]
                 for sent, received in result:
                     mac_address = received.hwsrc
                     devices.append({"ip": received.psrc, "mac": mac_address})
