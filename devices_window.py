@@ -8,6 +8,7 @@ from netinfo2 import nmap_scan  # Import the port scan function
 from netinfo import unified_device_scan, add_device_to_tree
 from devices_history import save_scan
 from networkspeed import start_speed_test
+from guidance_devices import guidance_of_devices
 
 is_scanning = [False]
 is_port_scanning = [False]  # Flag to manage port scanning state
@@ -129,16 +130,19 @@ def navigate_to_devices(main_frame):
     guidance_image = guidance_image.resize((40, 40))
     guidance_icon = ImageTk.PhotoImage(guidance_image)
 
-     # New button with an image
+    # Create the button
     new_button = Button(
         top_buttons_frame,
         image=guidance_icon,
         bd=1,
         bg="#2c2c2c",
         highlightthickness=0,
-        activebackground='#181818',
-        command=lambda: print("Button clicked!")
+        activebackground='#181818'
     )
+
+    # Set the command separately
+    new_button.config(command=guidance_of_devices)
+    
     new_button.image = guidance_icon  # Keep a reference to avoid garbage collection
     new_button.pack(side="right", padx=(5, 0))
 

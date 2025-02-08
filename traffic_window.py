@@ -4,6 +4,7 @@ import scapy.all as scapy
 from scapy.layers.inet import IP, TCP, UDP
 import psutil
 from PIL import Image, ImageTk
+from guidance_traffic import guidance_of_traffic
 import threading
 import time
 import os
@@ -132,8 +133,8 @@ def parse_filters(filter_expr):
     """Convert filter expression to a properly formatted list."""
     # Replace logical operators
     filter_expr = filter_expr.replace("!", " not ")
-    filter_expr = filter_expr.replace("&&", " and ")
-    filter_expr = filter_expr.replace("||", " or ")
+    filter_expr = filter_expr.replace("&", " and ")
+    filter_expr = filter_expr.replace("|", " or ")
 
     # Tokenize the expression and split by spaces
     filter_parts = filter_expr.strip().split()
@@ -168,17 +169,20 @@ def update_traffic_display():
             traffic_tree.tag_configure(protocol, background=color)  # Apply color
 
 def check_src(packet, ip):
-    """Check if the source IP matches."""
-    return get_packet_info(packet)[1] == ip
+    if packet.haslayer(scapy.IP):
+        return packet[scapy.IP].src == ip
+    elif packet.haslayer(scapy.IPv6):
+        return packet[scapy.IPv6].src == ip
+    else:
+        return False
 
 def check_dst(packet, ip):
-    """Check if the destination IP matches."""
-    return get_packet_info(packet)[2] == ip
-
-def check_port(packet, port):
-    """Check if the port matches (TCP or UDP)."""
-    return (packet.haslayer(TCP) and (packet.sport == port or packet.dport == port)) or \
-           (packet.haslayer(UDP) and (packet.sport == port or packet.dport == port))
+    if packet.haslayer(scapy.IP):
+        return packet[scapy.IP].dst == ip
+    elif packet.haslayer(scapy.IPv6):
+        return packet[scapy.IPv6].dst == ip
+    else:
+        return False
 
 # def check_protocol(packet, proto):
 #     if proto == "tcp":
@@ -209,7 +213,6 @@ def check_ip(packet, ip, direction="src"):
     elif direction == "dst":
         return packet_info[2] == ip
     return False
-
 def packet_matches_filter(packet, filters):
     try:
         if not filters:
@@ -229,7 +232,6 @@ def packet_matches_filter(packet, filters):
         # Apply existing filter transformations
         condition_string = re.sub(r'\bsrc\s([\d\.]+)\b', r'check_src(packet, "\1")', condition_string)
         condition_string = re.sub(r'\bdst\s([\d\.]+)\b', r'check_dst(packet, "\1")', condition_string)
-        condition_string = re.sub(r'\bport\s(\d+)\b', r'check_port(packet, \1)', condition_string)
 
         # Check protocol
         protocol, _, _, _, _ = get_packet_info(packet)
@@ -250,8 +252,7 @@ def packet_matches_filter(packet, filters):
                 protocol_condition = eval(condition_string, {
                     "packet": packet, 
                     "check_src": check_src, 
-                    "check_dst": check_dst, 
-                    "check_port": check_port, 
+                    "check_dst": check_dst,  
                     "check_protocol": check_protocol,
                     "check_mac_or_ipv6": check_mac_or_ipv6
                 })
@@ -260,12 +261,15 @@ def packet_matches_filter(packet, filters):
                 if not protocol_condition:
                     return False
 
+            # If ipv6 is not combined with any other protocol, return the ipv6 condition
+            else:
+                return ipv6_condition
+
         print(f"Evaluating condition: {condition_string}")
         return eval(condition_string, {
             "packet": packet, 
             "check_src": check_src, 
-            "check_dst": check_dst, 
-            "check_port": check_port, 
+            "check_dst": check_dst,  
             "check_protocol": check_protocol,
             "check_mac_or_ipv6": check_mac_or_ipv6
         })
@@ -273,7 +277,7 @@ def packet_matches_filter(packet, filters):
     except Exception as e:
         print(f"Error in filter evaluation: {e}")
         return False
-
+    
 def check_mac_or_ipv6(packet, value):
     """Check if it's a MAC address or an IPv6 address."""
     # Check MAC addresses
@@ -450,7 +454,7 @@ def get_all_network_interfaces():
     interfaces = psutil.net_if_addrs()
     return list(interfaces.keys())  # Return all interface names
 
-def navigate_to_traffic(main_frame, stop_scanning):
+def navigate_to_traffic(main_frame):
     global traffic_tree, save_button, filter_entry, in_traffic_window, selected_interface
 
     # Stop capturing if we are entering the traffic window
@@ -544,6 +548,9 @@ def navigate_to_traffic(main_frame, stop_scanning):
     new_button = Button(header_frame, image=guidance_icon, bd=1, bg="#2c2c2c", highlightthickness=0, activebackground='#181818', command=lambda: print("Button clicked!"))
     new_button.image = guidance_icon  # Keep a reference to avoid garbage collection
     new_button.pack(side="right", padx=(5, 0))
+
+    # Set the command separately
+    new_button.config(command=guidance_of_traffic)
 
     # Apply style to Treeview
     style = ttk.Style()

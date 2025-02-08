@@ -55,7 +55,7 @@ def navigate_to_root(main_frame):
     for widget in main_frame.winfo_children():
         widget.destroy()
 
-    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.6", style="Main.TLabel")
+    root_window_label = ttk.Label(main_frame, text="NetWire v1.0.7", style="Main.TLabel")
     root_window_label.pack(pady=50)
 
     github_link_label = tk.Label(main_frame, text="https://github.com/pipohappy/networkapp55.git", font=("Arial", 18, "bold"), bg='#2c2c2c', fg="orange", cursor="hand2")
@@ -116,18 +116,14 @@ def main():
     # Default view when app starts
     navigate_to_root(main_frame)
 
-    # Define the stop_scanning function (this is an example, modify it as per your requirements)
-    def stop_scanning():
-        print("Scanning stopped.")  # Example action, modify this as necessary
-
     # Add buttons for navigation
     button1 = ttk.Button(sidebar_frame, image=devices_icon, style="Sidebar.TButton", command=lambda: navigate_to_devices(main_frame))
     button1.pack(fill="x", pady=10, padx=20)
 
-    button2 = ttk.Button(sidebar_frame, image=traffic_icon, style="Sidebar.TButton", command=lambda: navigate_to_traffic(main_frame, stop_scanning))  # Pass stop_scanning here
+    button2 = ttk.Button(sidebar_frame, image=traffic_icon, style="Sidebar.TButton", command=lambda: navigate_to_traffic(main_frame))  # Pass stop_scanning here
     button2.pack(fill="x", pady=10, padx=20)
 
-    button3 = ttk.Button(sidebar_frame, image=intconsole_icon, style="Sidebar.TButton", command=lambda: navigate_to_console(main_frame, stop_scanning))  # Pass stop_scanning here
+    button3 = ttk.Button(sidebar_frame, image=intconsole_icon, style="Sidebar.TButton", command=lambda: navigate_to_console(main_frame))  # Pass stop_scanning here
     button3.pack(fill="x", pady=10, padx=20)
 
     def toggle_full_screen(root):

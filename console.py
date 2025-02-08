@@ -1,13 +1,16 @@
 import paramiko
 import threading
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, scrolledtext, Button
+from PIL import Image, ImageTk
+from guidance_console import guidance_of_console
+import os
+import sys
 import time
 
 class Console:
-    def __init__(self, main_frame, stop_scanning):
+    def __init__(self, main_frame):
         self.main_frame = main_frame
-        self.stop_scanning = stop_scanning
         self.protocol = tk.StringVar(value="ssh")  # Default to SSH
         self.address = tk.StringVar()
         self.port = tk.StringVar(value="22")
@@ -39,6 +42,33 @@ class Console:
 
         ttk.Button(self.top_frame, text="Connect", style="Console.TButton", command=self.connect).pack(side="left", padx=5)
         ttk.Button(self.top_frame, text="Disconnect", style="Console.TButton", command=self.disconnect).pack(side="left", padx=5)
+
+        def resource_path(relative_path):
+            """ Get the absolute path to a resource bundled with PyInstaller """
+            try:
+                base_path = sys._MEIPASS
+            except Exception:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+
+        guidance_image = Image.open(resource_path("assets/guidance.png"))  # Replace with your image path
+        guidance_image = guidance_image.resize((40, 40))
+        guidance_icon = ImageTk.PhotoImage(guidance_image)
+
+        new_button = Button(
+        self.top_frame,
+        image=guidance_icon,
+        bd=1,
+        bg="#2c2c2c",
+        highlightthickness=0,
+        activebackground='#181818'
+        )
+
+        # Set the command separately
+        new_button.config(command=guidance_of_console)
+        
+        new_button.image = guidance_icon  # Keep a reference to avoid garbage collection
+        new_button.pack(side="right", padx=(5, 0))
 
         self.output_text = scrolledtext.ScrolledText(
             self.main_frame,
@@ -189,8 +219,8 @@ class Console:
         self.output_text.config(state="disabled")
         self.output_text.yview("end")
 
-def navigate_to_console(main_frame, stop_scanning):
+def navigate_to_console(main_frame):
     for widget in main_frame.winfo_children():
         widget.destroy()
-    console = Console(main_frame, stop_scanning)
+    console = Console(main_frame)
     return console
